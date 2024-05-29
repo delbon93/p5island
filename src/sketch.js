@@ -1,13 +1,15 @@
 const WIDTH = 800;
 const HEIGHT = WIDTH;
 
-let heightmap;
+let heightmaps = [];
+let heightmapIndex = 0;
 let mainShader;
 
 function preload() {
-    heightmap = loadImage("res/heightmap.png");
+    heightmaps.push(loadImage("res/heightmap3.png"));
+    heightmaps.push(loadImage("res/heightmap.png"));
+    heightmaps.push(loadImage("res/heightmap2.png"));
     mainShader = loadShader("shader/island.vert", "shader/island.frag");
-
 }
 
 function setup() {
@@ -18,10 +20,15 @@ function rgbToShaderColor(r, g, b) {
     return [r / 255, g / 255, b / 255, 1.0]
 }
 
+function keyTyped() {
+    if (key === 'h')
+        heightmapIndex = (heightmapIndex + 1) % heightmaps.length
+}
+
 function draw() {
     let mousePos = [mouseX / WIDTH, 1.0 - mouseY / WIDTH];
 
-    mainShader.setUniform("uHeightmap", heightmap);
+    mainShader.setUniform("uHeightmap", heightmaps[heightmapIndex]);
     mainShader.setUniform("uMouse", mousePos);
     mainShader.setUniform("uColWater", rgbToShaderColor(40, 157, 166))
     mainShader.setUniform("uColSand", rgbToShaderColor(196, 199, 109))

@@ -17,13 +17,18 @@ const float _waterlevel = 0.07195;
 const float _sandlevel = 0.17;
 const float _grasslevel1 = 0.21;
 const float _grasslevel2 = 0.32;
-const float _mountainlevel = 0.45;
-const float _snowlevel = 0.65;
+const float _mountainlevel = 0.55;
 
 #define LEVEL_COLOR(h, level, color) if (h < level) { gl_FragColor = color; }
+#define HIGHEST_LEVEL(color) gl_FragColor = color;
+
+float sig(float t) {
+    return 1.0 / (1.0 + exp(-6.0 * (t - 0.5)));
+}
 
 float falloffByDistance(float d) {
-    return max(0.0,  1.0 - sqrt(d / 0.5));
+    d = clamp(d, 0.0, 1.5);
+    return clamp(1.0 - sig(d / 0.5), 0.05, 1.0);
 }
 
 float falloff(vec2 p) {
@@ -50,10 +55,16 @@ void main() {
     float h = height(vTexCoord);
 
     // mind the inverse order
-    LEVEL_COLOR(h, _snowlevel, uColSnow)
+    HIGHEST_LEVEL(uColSnow)
     LEVEL_COLOR(h, _mountainlevel, uColMountain)
     LEVEL_COLOR(h, _grasslevel2, uColGrass2)
     LEVEL_COLOR(h, _grasslevel1, uColGrass1)
     LEVEL_COLOR(h, _sandlevel, uColSand)
     LEVEL_COLOR(h, _waterlevel, uColWater)
+
+    if (h < _waterlevel) {
+        float subsurfaceness = h / _waterlevel;
+        vec4 blueTint = vec4(uColWater.xyz, 0.0) * 0.33;
+        gl_FragColor = mix(uColWater, uColSand + blueTint, subsurfaceness / 3.0);
+    }
 }
