@@ -1,10 +1,19 @@
 const WIDTH = 800;
-const HEIGHT = 600;
+const HEIGHT = WIDTH;
+
+let heightmap;
+let mainShader;
+
+function preload() {
+    heightmap = loadImage("res/heightmap.png");
+    mainShader = loadShader("shader/island.vert", "shader/island.frag");
+}
 
 function setup() {
-	createCanvas(WIDTH, HEIGHT);
+	createCanvas(WIDTH, HEIGHT, WEBGL);
 }
 
 function draw() {
-    background(51);
+    shader(mainShader);
+    rect(0, 0, WIDTH, HEIGHT);
 }
