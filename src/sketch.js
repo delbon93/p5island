@@ -19,12 +19,12 @@ function setup() {
 }
 
 function rgbToShaderColor(r, g, b) {
-    return [r / 255, g / 255, b / 255, 1.0]
+    return [r / 255, g / 255, b / 255, 1.0];
 }
 
 function keyTyped() {
     if (key === 'h')
-        heightmapIndex = (heightmapIndex + 1) % heightmaps.length
+        heightmapIndex = (heightmapIndex + 1) % heightmaps.length;
 }
 
 function draw() {
@@ -34,12 +34,12 @@ function draw() {
     mainShader.setUniform("uWavemap", wavemap);
     mainShader.setUniform("uMouse", mousePos);
 
-    mainShader.setUniform("uColWater", rgbToShaderColor(40, 157, 166))
-    mainShader.setUniform("uColSand", rgbToShaderColor(196, 199, 109))
-    mainShader.setUniform("uColGrass1", rgbToShaderColor(120, 199, 90))
-    mainShader.setUniform("uColGrass2", rgbToShaderColor(52, 97, 45))
-    mainShader.setUniform("uColMountain", rgbToShaderColor(110, 112, 103))
-    mainShader.setUniform("uColSnow", rgbToShaderColor(207, 224, 227))
+    mainShader.setUniform("uColWater", rgbToShaderColor(40, 157, 166));
+    mainShader.setUniform("uColSand", rgbToShaderColor(196, 199, 109));
+    mainShader.setUniform("uColGrass1", rgbToShaderColor(120, 199, 90));
+    mainShader.setUniform("uColGrass2", rgbToShaderColor(52, 97, 45));
+    mainShader.setUniform("uColMountain", rgbToShaderColor(110, 112, 103));
+    mainShader.setUniform("uColSnow", rgbToShaderColor(207, 224, 227));
 
     mainShader.setUniform("uTime", millis() / 1000);
 
