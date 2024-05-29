@@ -3,6 +3,7 @@ precision mediump float;
 varying vec2 vTexCoord;
 
 uniform sampler2D uHeightmap;
+uniform sampler2D uWavemap;
 uniform vec2 uMouse;
 
 uniform vec4 uColWater;
@@ -12,15 +13,21 @@ uniform vec4 uColGrass2;
 uniform vec4 uColMountain;
 uniform vec4 uColSnow;
 
+uniform float uTime;
+
 
 const float _waterlevel = 0.07195;
 const float _sandlevel = 0.17;
-const float _grasslevel1 = 0.21;
-const float _grasslevel2 = 0.32;
+const float _grasslevel1 = 0.26;
+const float _grasslevel2 = 0.42;
 const float _mountainlevel = 0.55;
 
 #define LEVEL_COLOR(h, level, color) if (h < level) { gl_FragColor = color; }
 #define HIGHEST_LEVEL(color) gl_FragColor = color;
+
+vec2 uvWrap(vec2 uv) {
+    return vec2(fract(uv.x), fract(uv.y));
+}
 
 float sig(float t) {
     return 1.0 / (1.0 + exp(-6.0 * (t - 0.5)));
@@ -49,6 +56,21 @@ float height(vec2 p) {
     return h;
 }
 
+vec4 water(vec2 p) {
+    const float wavespeed = 0.01;
+    vec2 sampleP = uvWrap(p + vec2(wavespeed, wavespeed * 2.0) * uTime);
+    float w1 = texture2D(uWavemap, sampleP).x;
+    w1 = mix(0.9, 1.0, w1);
+
+    sampleP = uvWrap(p.yx + vec2(-wavespeed * 1.5, wavespeed) * uTime);
+    float w2 = texture2D(uWavemap, sampleP).x;
+    w2 = mix(0.9, 1.0, w2);
+
+    float w = max(w1, w2);
+
+    return uColWater * w;
+}
+
 void main() {
     vec2 uv = vTexCoord;
 
@@ -63,8 +85,9 @@ void main() {
     LEVEL_COLOR(h, _waterlevel, uColWater)
 
     if (h < _waterlevel) {
-        float subsurfaceness = h / _waterlevel;
-        vec4 blueTint = vec4(uColWater.xyz, 0.0) * 0.33;
-        gl_FragColor = mix(uColWater, uColSand + blueTint, subsurfaceness / 3.0);
+        vec4 waterCol = water(uv);
+        float subsurfaceness = h / (2.2 *_waterlevel);
+        vec4 blueTint = vec4(waterCol.xyz, 0.0) * 0.33;
+        gl_FragColor = mix(waterCol, uColSand + blueTint, subsurfaceness);
     }
 }
