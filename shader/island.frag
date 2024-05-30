@@ -5,6 +5,8 @@ varying vec2 vTexCoord;
 uniform sampler2D uHeightmap;
 uniform sampler2D uWavemap;
 uniform sampler2D uTerrainGrain;
+uniform sampler2D uClouds;
+
 uniform vec2 uMouse;
 
 uniform vec4 uColWater;
@@ -20,6 +22,7 @@ uniform float uTime;
 
 uniform float uShadowsEnabled;
 uniform float uWavesEnabled;
+uniform float uCloudsEnabled;
 
 const float _waterlevel = 0.07195;
 const float _sandlevel = 0.17;
@@ -35,6 +38,8 @@ const float _mountainlevel = 0.55;
 
 #define BLUR_KERNEL_OFFSET 0.0025
 #define BLUR_COMP(uv, xoff, yoff, weight) (weight * light(vec2(uv.x + xoff * BLUR_KERNEL_OFFSET, uv.y + yoff * BLUR_KERNEL_OFFSET)))
+
+#define WHITE vec4(1.0)
 
 vec2 uvWrap(vec2 uv) {
     return vec2(fract(uv.x), fract(uv.y));
@@ -143,6 +148,30 @@ float light(vec2 p) {
     return FULL_LIGHT;
 }
 
+float clouds(vec2 uv) {
+    if (uCloudsEnabled < 0.5)
+        return 0.0;
+
+    const vec2 moveDir = vec2(1.0, 2.0) * 0.02;
+
+    const float noiseScale = 0.15;
+
+    vec2 sampleP = (uv + moveDir * uTime) * noiseScale;
+    vec2 p = uvWrap(sampleP);
+    float cloud1 = texture2D(uClouds, p).x;
+
+    sampleP = (uv + moveDir * uTime + vec2(2.4, -1.0)) * noiseScale;
+    p = uvWrap(sampleP);
+    float cloud2 = texture2D(uClouds, p).x;
+
+    float mixFactor =  2.0 * sin(uTime * 0.05) * cos(uTime * 0.15) + 1.0;
+    float cloud = mix(cloud1, cloud2, mixFactor);
+
+    cloud *= 1.2;
+
+    return cloud * cloud;
+}
+
 float normalLight(vec2 p) {
     const float FULL_LIGHT = 1.0;
     const float SHADOW = 0.95;
@@ -216,4 +245,7 @@ void main() {
     }
 
     gl_FragColor = lightModulate(gl_FragColor, normalize(uSunDir)) * totalLight;
+
+    float cloud = clouds(uv);
+    gl_FragColor = mix(gl_FragColor, WHITE, cloud);
 }

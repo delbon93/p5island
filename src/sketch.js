@@ -5,10 +5,13 @@ let heightmaps = [];
 let heightmapIndex = 0;
 let wavemap;
 let terrainGrain;
+let clouds;
+
 let mainShader;
 
 let shadowsEnabled = 1.0;
 let wavesEnabled = 1.0;
+let cloudsEnabled = 1.0;
 
 let sunDirection;
 
@@ -18,6 +21,7 @@ function preload() {
     heightmaps.push(loadImage("res/heightmap2.png"));
     wavemap = loadImage("res/waves.png");
     terrainGrain = loadImage("res/grain.png");
+    clouds = loadImage("res/clouds.png");
     mainShader = loadShader("shader/island.vert", "shader/island.frag");
 }
 
@@ -38,6 +42,8 @@ function keyTyped() {
         shadowsEnabled = 1 - shadowsEnabled;
     if (key === 'w')
         wavesEnabled = 1 - wavesEnabled;
+    if (key === 'c')
+        cloudsEnabled = 1 - cloudsEnabled;
 }
 
 function draw() {
@@ -46,6 +52,8 @@ function draw() {
     mainShader.setUniform("uHeightmap", heightmaps[heightmapIndex]);
     mainShader.setUniform("uTerrainGrain", terrainGrain);
     mainShader.setUniform("uWavemap", wavemap);
+    mainShader.setUniform("uClouds", clouds);
+
     mainShader.setUniform("uMouse", mousePos);
 
     mainShader.setUniform("uColWater", rgbToShaderColor(40, 157, 166));
@@ -60,6 +68,7 @@ function draw() {
     mainShader.setUniform("uTime", millis() / 1000);
     mainShader.setUniform("uShadowsEnabled", shadowsEnabled);
     mainShader.setUniform("uWavesEnabled", wavesEnabled);
+    mainShader.setUniform("uCloudsEnabled", cloudsEnabled);
 
     shader(mainShader);
     rect(0, 0, WIDTH, HEIGHT);
