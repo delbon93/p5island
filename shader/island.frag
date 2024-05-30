@@ -216,9 +216,6 @@ void main() {
         gl_FragColor = mix(waterCol, uColSand + blueTint, subsurfaceness);
     }
 
-    if (uShadowsEnabled < 0.5)
-        return;
-
     float sunLight = 0.0;    
 
     #ifdef USE_GAUSSIAN_BLUR
@@ -244,7 +241,8 @@ void main() {
         totalLight = clamp(totalLight += diff * 3.0 ,0.0, 1.0);
     }
 
-    gl_FragColor = lightModulate(gl_FragColor, normalize(uSunDir)) * totalLight;
+    if (uShadowsEnabled > 0.5)
+        gl_FragColor = lightModulate(gl_FragColor, normalize(uSunDir)) * totalLight;
 
     float cloud = clouds(uv);
     gl_FragColor = mix(gl_FragColor, WHITE, cloud);
