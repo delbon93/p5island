@@ -17,15 +17,20 @@ uniform vec3 uSunDir;
 
 uniform float uTime;
 
-
 const float _waterlevel = 0.07195;
 const float _sandlevel = 0.17;
 const float _grasslevel1 = 0.26;
 const float _grasslevel2 = 0.42;
 const float _mountainlevel = 0.55;
 
+#define USE_SOFT_SHADOWS
+//#define USE_GAUSSIAN_BLUR
+
 #define LEVEL_COLOR(h, level, color) if (h < level) { gl_FragColor = color; }
 #define HIGHEST_LEVEL(color) gl_FragColor = color;
+
+#define BLUR_KERNEL_OFFSET 0.0025
+#define BLUR_COMP(uv, xoff, yoff, weight) (weight * light(vec2(uv.x + xoff * BLUR_KERNEL_OFFSET, uv.y + yoff * BLUR_KERNEL_OFFSET)))
 
 vec2 uvWrap(vec2 uv) {
     return vec2(fract(uv.x), fract(uv.y));
@@ -75,9 +80,13 @@ vec4 water(vec2 p) {
 
 float light(vec2 p) {
     const float FULL_LIGHT = 1.0;
-    const float SHADOW = 0.5;
+    const float SHADOW = 0.65;
+    const float WEAK_SHADOW = 0.85;
 
-    vec3 curr = vec3(p.x, p.y, height(p) + 0.01);
+    const float MAX_PATH_LENGTH_FOR_WEAK_SHADOW = 0.3;
+
+    vec3 origin = vec3(p.x, p.y, height(p) + 0.01);
+    vec3 curr = origin;
 
     vec3 traceDir = -normalize(uSunDir);
 
@@ -88,8 +97,15 @@ float light(vec2 p) {
     for (int i = 0; i < maxStepCount; i++) {
         float currHeight = height(curr.xy);
 
-        if (curr.z < currHeight)
+        if (curr.z < currHeight) {
+            #ifdef USE_SOFT_SHADOWS
+            float pathLength = length(origin - curr);
+            float t = clamp(pathLength / MAX_PATH_LENGTH_FOR_WEAK_SHADOW, 0.0, 1.0);
+            return mix(SHADOW, WEAK_SHADOW, t);
+            #else
             return SHADOW;
+            #endif
+        }
 
         if (curr.z >= _ceiling)
             return FULL_LIGHT;
@@ -126,5 +142,22 @@ void main() {
         gl_FragColor = mix(waterCol, uColSand + blueTint, subsurfaceness);
     }
 
-    gl_FragColor = gl_FragColor * light(uv);
+
+    float totalLight = 0.0;    
+
+    #ifdef USE_GAUSSIAN_BLUR
+    totalLight += BLUR_COMP(uv, -1.0, -1.0, 1.0 / 16.0);
+    totalLight += BLUR_COMP(uv,  0.0, -1.0, 1.0 /  8.0);
+    totalLight += BLUR_COMP(uv,  1.0, -1.0, 1.0 / 16.0);
+    totalLight += BLUR_COMP(uv, -1.0,  0.0, 1.0 /  8.0);
+    totalLight += BLUR_COMP(uv,  0.0,  0.0, 1.0 /  4.0);
+    totalLight += BLUR_COMP(uv,  1.0,  0.0, 1.0 /  8.0);
+    totalLight += BLUR_COMP(uv, -1.0,  1.0, 1.0 / 16.0);
+    totalLight += BLUR_COMP(uv,  0.0,  1.0, 1.0 /  8.0);
+    totalLight += BLUR_COMP(uv,  1.0,  1.0, 1.0 / 16.0);
+    #else
+    totalLight = light(uv);
+    #endif
+    
+    gl_FragColor = gl_FragColor * totalLight;
 }
