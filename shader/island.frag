@@ -7,6 +7,8 @@ uniform sampler2D uWavemap;
 uniform sampler2D uTerrainGrain;
 uniform sampler2D uClouds;
 
+uniform float uFalloffExponent;
+
 uniform vec2 uMouse;
 
 uniform vec4 uColWater;
@@ -23,6 +25,7 @@ uniform float uTime;
 uniform float uShadowsEnabled;
 uniform float uWavesEnabled;
 uniform float uCloudsEnabled;
+uniform float uEdgeFalloffEnabled;
 
 const float _waterlevel = 0.07195;
 const float _sandlevel = 0.17;
@@ -55,13 +58,16 @@ float falloffByDistance(float d) {
 }
 
 float falloff(vec2 p) {
+    if (uEdgeFalloffEnabled < 0.5)
+        return 1.0;
+    
     const vec2 center = vec2(0.5);
 
     float dx = center.x - p.x;
     float dy = center.y - p.y;
     float d = sqrt(dx * dx + dy * dy);
 
-    return falloffByDistance(d);
+    return clamp(exp(uFalloffExponent) * falloffByDistance(d), 0.0, 1.0);
 }
 
 float height(vec2 p) {
@@ -102,6 +108,30 @@ vec4 water(vec2 p) {
     float w = min(w1, w2);
 
     return uColWater * w;
+}
+
+float clouds(vec2 uv) {
+    if (uCloudsEnabled < 0.5)
+        return 0.0;
+
+    const vec2 moveDir = vec2(1.0, 2.0) * 0.02;
+
+    const float noiseScale = 0.15;
+
+    vec2 sampleP = (uv + moveDir * uTime) * noiseScale;
+    vec2 p = uvWrap(sampleP);
+    float cloud1 = texture2D(uClouds, p).x;
+
+    sampleP = (uv + moveDir * uTime + vec2(2.4, -1.0)) * noiseScale;
+    p = uvWrap(sampleP);
+    float cloud2 = texture2D(uClouds, p).x;
+
+    float mixFactor =  2.0 * sin(uTime * 0.05) * cos(uTime * 0.15) + 1.0;
+    float cloud = mix(cloud1, cloud2, mixFactor);
+
+    cloud *= 1.2;
+
+    return cloud * cloud;
 }
 
 float light(vec2 p) {
@@ -146,30 +176,6 @@ float light(vec2 p) {
     }
 
     return FULL_LIGHT;
-}
-
-float clouds(vec2 uv) {
-    if (uCloudsEnabled < 0.5)
-        return 0.0;
-
-    const vec2 moveDir = vec2(1.0, 2.0) * 0.02;
-
-    const float noiseScale = 0.15;
-
-    vec2 sampleP = (uv + moveDir * uTime) * noiseScale;
-    vec2 p = uvWrap(sampleP);
-    float cloud1 = texture2D(uClouds, p).x;
-
-    sampleP = (uv + moveDir * uTime + vec2(2.4, -1.0)) * noiseScale;
-    p = uvWrap(sampleP);
-    float cloud2 = texture2D(uClouds, p).x;
-
-    float mixFactor =  2.0 * sin(uTime * 0.05) * cos(uTime * 0.15) + 1.0;
-    float cloud = mix(cloud1, cloud2, mixFactor);
-
-    cloud *= 1.2;
-
-    return cloud * cloud;
 }
 
 float normalLight(vec2 p) {

@@ -1,8 +1,9 @@
 const WIDTH = 800;
 const HEIGHT = WIDTH;
+const FPS = 75;
 
 let heightmaps = [];
-let heightmapIndex = 0;
+let heightmapIndex = 2;
 let wavemap;
 let terrainGrain;
 let clouds;
@@ -12,6 +13,10 @@ let mainShader;
 let shadowsEnabled = 1.0;
 let wavesEnabled = 1.0;
 let cloudsEnabled = 1.0;
+let edgeFalloffEnabled = 1.0;
+let falloffExponent = 0.0;
+
+let frozenMousePos = null;
 
 let sunDirection;
 
@@ -44,15 +49,39 @@ function keyTyped() {
         wavesEnabled = 1 - wavesEnabled;
     if (key === 'c')
         cloudsEnabled = 1 - cloudsEnabled;
+    if (key === 'f')
+        edgeFalloffEnabled = 1 - edgeFalloffEnabled;
+    if (key === 'm') {
+        if (frozenMousePos === null)
+            frozenMousePos = [mouseX, mouseY];
+        else
+            frozenMousePos = null;
+    }
 }
-
+    
 function draw() {
-    let mousePos = [mouseX / WIDTH, 1.0 - mouseY / HEIGHT];
+    if (keyIsDown(UP_ARROW))
+        falloffExponent += 1.5 / FPS;
+    if (keyIsDown(DOWN_ARROW))
+        falloffExponent -= 1.5 / FPS;
+
+
+    let mX = mouseX;
+    let mY = mouseY;
+
+    if (frozenMousePos !== null) {
+        mX = frozenMousePos[0];
+        mY = frozenMousePos[1];
+    }
+
+    let mousePos = [mX / WIDTH, 1.0 - mY / HEIGHT];
 
     mainShader.setUniform("uHeightmap", heightmaps[heightmapIndex]);
     mainShader.setUniform("uTerrainGrain", terrainGrain);
     mainShader.setUniform("uWavemap", wavemap);
     mainShader.setUniform("uClouds", clouds);
+
+    mainShader.setUniform("uFalloffExponent", falloffExponent);
 
     mainShader.setUniform("uMouse", mousePos);
 
@@ -63,12 +92,13 @@ function draw() {
     mainShader.setUniform("uColMountain", rgbToShaderColor(110, 112, 103));
     mainShader.setUniform("uColSnow", rgbToShaderColor(207, 224, 227));
 
-    mainShader.setUniform("uSunDir", [WIDTH / 2 - mouseX, mouseY - HEIGHT / 2, -100]);
+    mainShader.setUniform("uSunDir", [WIDTH / 2 - mX, mY - HEIGHT / 2, -100]);
 
     mainShader.setUniform("uTime", millis() / 1000);
     mainShader.setUniform("uShadowsEnabled", shadowsEnabled);
     mainShader.setUniform("uWavesEnabled", wavesEnabled);
     mainShader.setUniform("uCloudsEnabled", cloudsEnabled);
+    mainShader.setUniform("uEdgeFalloffEnabled", edgeFalloffEnabled);
 
     shader(mainShader);
     rect(0, 0, WIDTH, HEIGHT);
