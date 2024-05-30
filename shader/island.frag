@@ -174,7 +174,7 @@ float clouds(vec2 uv) {
 
 float normalLight(vec2 p) {
     const float FULL_LIGHT = 1.0;
-    const float SHADOW = 0.95;
+    const float SHADOW = 0.9;
 
     vec3 n = normal(p);
 
@@ -209,7 +209,7 @@ void main() {
     float normLight = normalLight(uv);
 
     if (h < _waterlevel) {
-        normLight = 0.0;
+        // normLight = 0.0;
         vec4 waterCol = water(uv);
         float subsurfaceness = h / (2.2 *_waterlevel);
         vec4 blueTint = vec4(waterCol.xyz, 0.0) * 0.33;
@@ -233,7 +233,8 @@ void main() {
     #endif
 
 
-    float totalLight = max(normLight, sunLight);
+    // float totalLight = max(normLight, sunLight);
+    float totalLight = sqrt(normLight) * sqrt(sunLight);
     //float totalLight = sunLight;
 
     if (h < _waterlevel) {
