@@ -7,6 +7,9 @@ let wavemap;
 let terrainGrain;
 let mainShader;
 
+let shadowsEnabled = 1.0;
+let wavesEnabled = 1.0;
+
 let sunDirection;
 
 function preload() {
@@ -31,6 +34,10 @@ function rgbToShaderColor(r, g, b) {
 function keyTyped() {
     if (key === 'h')
         heightmapIndex = (heightmapIndex + 1) % heightmaps.length;
+    if (key === 's')
+        shadowsEnabled = 1 - shadowsEnabled;
+    if (key === 'w')
+        wavesEnabled = 1 - wavesEnabled;
 }
 
 function draw() {
@@ -51,6 +58,8 @@ function draw() {
     mainShader.setUniform("uSunDir", [WIDTH / 2 - mouseX, mouseY - HEIGHT / 2, -100]);
 
     mainShader.setUniform("uTime", millis() / 1000);
+    mainShader.setUniform("uShadowsEnabled", shadowsEnabled);
+    mainShader.setUniform("uWavesEnabled", wavesEnabled);
 
     shader(mainShader);
     rect(0, 0, WIDTH, HEIGHT);

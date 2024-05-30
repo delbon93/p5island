@@ -18,6 +18,9 @@ uniform vec3 uSunDir;
 
 uniform float uTime;
 
+uniform float uShadowsEnabled;
+uniform float uWavesEnabled;
+
 const float _waterlevel = 0.07195;
 const float _sandlevel = 0.17;
 const float _grasslevel1 = 0.26;
@@ -70,8 +73,6 @@ vec3 normal(vec2 p) {
     vec2 sx2 = vec2(p.x + NORMAL_SAMPLE_DELTA, p.y);
     vec2 sy1 = vec2(p.x, p.y - NORMAL_SAMPLE_DELTA);
     vec2 sy2 = vec2(p.x, p.y + NORMAL_SAMPLE_DELTA);
-    float dx = height(sx2) - height(sx1);
-    float dy = height(sy2) - height(sy1);
     vec3 px1 = vec3(sx1, height(sx1));
     vec3 px2 = vec3(sx2, height(sx2));
     vec3 py1 = vec3(sy1, height(sy1));
@@ -81,6 +82,9 @@ vec3 normal(vec2 p) {
 }
 
 vec4 water(vec2 p) {
+    if (uWavesEnabled < 0.5)
+        return uColWater;
+
     const float wavespeed = 0.01;
     vec2 sampleP = uvWrap(p + vec2(wavespeed, wavespeed * 2.0) * uTime);
     float w1 = texture2D(uWavemap, sampleP).x;
@@ -161,7 +165,7 @@ vec4 lightModulate(vec4 l, vec3 lightDir) {
 void main() {
     vec2 uv = vTexCoord;
 
-    float h = height(vTexCoord);
+    float h = height(uv);
 
     float biomeH = h + texture2D(uTerrainGrain, uv).x * 0.1;
 
@@ -183,6 +187,9 @@ void main() {
         gl_FragColor = mix(waterCol, uColSand + blueTint, subsurfaceness);
     }
 
+    if (uShadowsEnabled < 0.5)
+        return;
+
     float sunLight = 0.0;    
 
     #ifdef USE_GAUSSIAN_BLUR
@@ -200,9 +207,13 @@ void main() {
     #endif
 
 
-
     float totalLight = max(normLight, sunLight);
     //float totalLight = sunLight;
-    
+
+    if (h < _waterlevel) {
+        float diff = abs(h - _waterlevel);
+        totalLight = clamp(totalLight += diff * 3.0 ,0.0, 1.0);
+    }
+
     gl_FragColor = lightModulate(gl_FragColor, normalize(uSunDir)) * totalLight;
 }
