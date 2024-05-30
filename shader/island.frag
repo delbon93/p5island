@@ -64,6 +64,22 @@ float height(vec2 p) {
     return h;
 }
 
+vec3 normal(vec2 p) {
+    const float NORMAL_SAMPLE_DELTA = 0.005;
+    vec2 sx1 = vec2(p.x - NORMAL_SAMPLE_DELTA, p.y);
+    vec2 sx2 = vec2(p.x + NORMAL_SAMPLE_DELTA, p.y);
+    vec2 sy1 = vec2(p.x, p.y - NORMAL_SAMPLE_DELTA);
+    vec2 sy2 = vec2(p.x, p.y + NORMAL_SAMPLE_DELTA);
+    float dx = height(sx2) - height(sx1);
+    float dy = height(sy2) - height(sy1);
+    vec3 px1 = vec3(sx1, height(sx1));
+    vec3 px2 = vec3(sx2, height(sx2));
+    vec3 py1 = vec3(sy1, height(sy1));
+    vec3 py2 = vec3(sy2, height(sy2));
+    
+    return normalize(cross(px2 - px1, py2 - py1));
+}
+
 vec4 water(vec2 p) {
     const float wavespeed = 0.01;
     vec2 sampleP = uvWrap(p + vec2(wavespeed, wavespeed * 2.0) * uTime);
@@ -123,6 +139,17 @@ float light(vec2 p) {
     return FULL_LIGHT;
 }
 
+float normalLight(vec2 p) {
+    const float FULL_LIGHT = 1.0;
+    const float SHADOW = 0.95;
+
+    vec3 n = normal(p);
+
+    float lightness = dot(-normalize(uSunDir), n);
+
+    return mix(SHADOW, FULL_LIGHT, lightness);
+}
+
 vec4 lightModulate(vec4 l, vec3 lightDir) {
     vec3 xyFlattened = normalize(vec3(lightDir.xy, 0.0));
     float lightFlatness = abs(dot(xyFlattened, lightDir));
@@ -146,29 +173,36 @@ void main() {
     LEVEL_COLOR(biomeH, _sandlevel, uColSand)
     LEVEL_COLOR(biomeH, _waterlevel, uColWater)
 
+    float normLight = normalLight(uv);
+
     if (h < _waterlevel) {
+        normLight = 0.0;
         vec4 waterCol = water(uv);
         float subsurfaceness = h / (2.2 *_waterlevel);
         vec4 blueTint = vec4(waterCol.xyz, 0.0) * 0.33;
         gl_FragColor = mix(waterCol, uColSand + blueTint, subsurfaceness);
     }
 
-
-    float totalLight = 0.0;    
+    float sunLight = 0.0;    
 
     #ifdef USE_GAUSSIAN_BLUR
-    totalLight += BLUR_COMP(uv, -1.0, -1.0, 1.0 / 16.0);
-    totalLight += BLUR_COMP(uv,  0.0, -1.0, 1.0 /  8.0);
-    totalLight += BLUR_COMP(uv,  1.0, -1.0, 1.0 / 16.0);
-    totalLight += BLUR_COMP(uv, -1.0,  0.0, 1.0 /  8.0);
-    totalLight += BLUR_COMP(uv,  0.0,  0.0, 1.0 /  4.0);
-    totalLight += BLUR_COMP(uv,  1.0,  0.0, 1.0 /  8.0);
-    totalLight += BLUR_COMP(uv, -1.0,  1.0, 1.0 / 16.0);
-    totalLight += BLUR_COMP(uv,  0.0,  1.0, 1.0 /  8.0);
-    totalLight += BLUR_COMP(uv,  1.0,  1.0, 1.0 / 16.0);
+    sunLight += BLUR_COMP(uv, -1.0, -1.0, 1.0 / 16.0);
+    sunLight += BLUR_COMP(uv,  0.0, -1.0, 1.0 /  8.0);
+    sunLight += BLUR_COMP(uv,  1.0, -1.0, 1.0 / 16.0);
+    sunLight += BLUR_COMP(uv, -1.0,  0.0, 1.0 /  8.0);
+    sunLight += BLUR_COMP(uv,  0.0,  0.0, 1.0 /  4.0);
+    sunLight += BLUR_COMP(uv,  1.0,  0.0, 1.0 /  8.0);
+    sunLight += BLUR_COMP(uv, -1.0,  1.0, 1.0 / 16.0);
+    sunLight += BLUR_COMP(uv,  0.0,  1.0, 1.0 /  8.0);
+    sunLight += BLUR_COMP(uv,  1.0,  1.0, 1.0 / 16.0);
     #else
-    totalLight = light(uv);
+    sunLight = light(uv);
     #endif
+
+
+
+    float totalLight = max(normLight, sunLight);
+    //float totalLight = sunLight;
     
     gl_FragColor = lightModulate(gl_FragColor, normalize(uSunDir)) * totalLight;
 }
