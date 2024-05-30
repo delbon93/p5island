@@ -4,6 +4,7 @@ const HEIGHT = WIDTH;
 let heightmaps = [];
 let heightmapIndex = 0;
 let wavemap;
+let terrainGrain;
 let mainShader;
 
 let sunDirection;
@@ -13,6 +14,7 @@ function preload() {
     heightmaps.push(loadImage("res/heightmap.png"));
     heightmaps.push(loadImage("res/heightmap2.png"));
     wavemap = loadImage("res/waves.png");
+    terrainGrain = loadImage("res/grain.png");
     mainShader = loadShader("shader/island.vert", "shader/island.frag");
 }
 
@@ -35,6 +37,7 @@ function draw() {
     let mousePos = [mouseX / WIDTH, 1.0 - mouseY / HEIGHT];
 
     mainShader.setUniform("uHeightmap", heightmaps[heightmapIndex]);
+    mainShader.setUniform("uTerrainGrain", terrainGrain);
     mainShader.setUniform("uWavemap", wavemap);
     mainShader.setUniform("uMouse", mousePos);
 

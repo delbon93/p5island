@@ -4,6 +4,7 @@ varying vec2 vTexCoord;
 
 uniform sampler2D uHeightmap;
 uniform sampler2D uWavemap;
+uniform sampler2D uTerrainGrain;
 uniform vec2 uMouse;
 
 uniform vec4 uColWater;
@@ -127,13 +128,15 @@ void main() {
 
     float h = height(vTexCoord);
 
+    float biomeH = h + texture2D(uTerrainGrain, uv).x * 0.1;
+
     // mind the inverse order
     HIGHEST_LEVEL(uColSnow)
-    LEVEL_COLOR(h, _mountainlevel, uColMountain)
-    LEVEL_COLOR(h, _grasslevel2, uColGrass2)
-    LEVEL_COLOR(h, _grasslevel1, uColGrass1)
-    LEVEL_COLOR(h, _sandlevel, uColSand)
-    LEVEL_COLOR(h, _waterlevel, uColWater)
+    LEVEL_COLOR(biomeH, _mountainlevel, uColMountain)
+    LEVEL_COLOR(biomeH, _grasslevel2, uColGrass2)
+    LEVEL_COLOR(biomeH, _grasslevel1, uColGrass1)
+    LEVEL_COLOR(biomeH, _sandlevel, uColSand)
+    LEVEL_COLOR(biomeH, _waterlevel, uColWater)
 
     if (h < _waterlevel) {
         vec4 waterCol = water(uv);
