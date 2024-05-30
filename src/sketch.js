@@ -6,6 +6,8 @@ let heightmapIndex = 0;
 let wavemap;
 let mainShader;
 
+let sunDirection;
+
 function preload() {
     heightmaps.push(loadImage("res/heightmap3.png"));
     heightmaps.push(loadImage("res/heightmap.png"));
@@ -16,6 +18,8 @@ function preload() {
 
 function setup() {
     createCanvas(WIDTH, HEIGHT, WEBGL);
+
+    sunDirection = p5.Vector.normalize(createVector(1, 3, 5));
 }
 
 function rgbToShaderColor(r, g, b) {
@@ -28,7 +32,7 @@ function keyTyped() {
 }
 
 function draw() {
-    let mousePos = [mouseX / WIDTH, 1.0 - mouseY / WIDTH];
+    let mousePos = [mouseX / WIDTH, 1.0 - mouseY / HEIGHT];
 
     mainShader.setUniform("uHeightmap", heightmaps[heightmapIndex]);
     mainShader.setUniform("uWavemap", wavemap);
@@ -40,6 +44,8 @@ function draw() {
     mainShader.setUniform("uColGrass2", rgbToShaderColor(52, 97, 45));
     mainShader.setUniform("uColMountain", rgbToShaderColor(110, 112, 103));
     mainShader.setUniform("uColSnow", rgbToShaderColor(207, 224, 227));
+
+    mainShader.setUniform("uSunDir", [WIDTH / 2 - mouseX, mouseY - HEIGHT / 2, -100]);
 
     mainShader.setUniform("uTime", millis() / 1000);
 
