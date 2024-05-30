@@ -123,6 +123,14 @@ float light(vec2 p) {
     return FULL_LIGHT;
 }
 
+vec4 lightModulate(vec4 l, vec3 lightDir) {
+    vec3 xyFlattened = normalize(vec3(lightDir.xy, 0.0));
+    float lightFlatness = abs(dot(xyFlattened, lightDir));
+    lightFlatness = smoothstep(0.7, 1.3, lightFlatness);
+    l.r = mix(l.r, max(l.r, 0.7), lightFlatness);
+    return l;
+}
+
 void main() {
     vec2 uv = vTexCoord;
 
@@ -162,5 +170,5 @@ void main() {
     totalLight = light(uv);
     #endif
     
-    gl_FragColor = gl_FragColor * totalLight;
+    gl_FragColor = lightModulate(gl_FragColor, normalize(uSunDir)) * totalLight;
 }
