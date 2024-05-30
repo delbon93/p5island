@@ -66,7 +66,7 @@ vec4 water(vec2 p) {
     float w2 = texture2D(uWavemap, sampleP).x;
     w2 = mix(0.9, 1.0, w2);
 
-    float w = max(w1, w2);
+    float w = min(w1, w2);
 
     return uColWater * w;
 }
