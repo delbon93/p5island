@@ -41,6 +41,14 @@ function rgbToShaderColor(r, g, b) {
 }
 
 function keyTyped() {
+    if (key === 'z') {
+        shadowsEnabled = 0;
+        wavesEnabled = 0;
+        cloudsEnabled = 0;
+        edgeFalloffEnabled = 0;
+        colorsEnabled = 0;
+    }
+
     if (key === 'h')
         heightmapIndex = (heightmapIndex + 1) % heightmaps.length;
     if (key === 's')
@@ -57,6 +65,8 @@ function keyTyped() {
         else
             frozenMousePos = null;
     }
+    if (key === 'o')
+        colorsEnabled = 1 - colorsEnabled;
 }
     
 function draw() {
@@ -99,6 +109,7 @@ function draw() {
     mainShader.setUniform("uWavesEnabled", wavesEnabled);
     mainShader.setUniform("uCloudsEnabled", cloudsEnabled);
     mainShader.setUniform("uEdgeFalloffEnabled", edgeFalloffEnabled);
+    mainShader.setUniform("uColorsEnabled", colorsEnabled);
 
     shader(mainShader);
     rect(0, 0, WIDTH, HEIGHT);

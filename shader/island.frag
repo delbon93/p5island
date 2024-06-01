@@ -26,6 +26,7 @@ uniform float uShadowsEnabled;
 uniform float uWavesEnabled;
 uniform float uCloudsEnabled;
 uniform float uEdgeFalloffEnabled;
+uniform float uColorsEnabled;
 
 const float _waterlevel = 0.07195;
 const float _sandlevel = 0.17;
@@ -204,23 +205,28 @@ void main() {
 
     float biomeH = h + texture2D(uTerrainGrain, uv).x * 0.1;
 
+    if (uColorsEnabled > 0.5) {
     // mind the inverse order
-    HIGHEST_LEVEL(uColSnow)
-    LEVEL_COLOR(biomeH, _mountainlevel, uColMountain)
-    LEVEL_COLOR(biomeH, _grasslevel2, uColGrass2)
-    LEVEL_COLOR(biomeH, _grasslevel1, uColGrass1)
-    LEVEL_COLOR(biomeH, _sandlevel, uColSand)
-    LEVEL_COLOR(biomeH, _waterlevel, uColWater)
+        HIGHEST_LEVEL(uColSnow)
+        LEVEL_COLOR(biomeH, _mountainlevel, uColMountain)
+        LEVEL_COLOR(biomeH, _grasslevel2, uColGrass2)
+        LEVEL_COLOR(biomeH, _grasslevel1, uColGrass1)
+        LEVEL_COLOR(biomeH, _sandlevel, uColSand)
+        LEVEL_COLOR(biomeH, _waterlevel, uColWater)
+
+        
+        if (h < _waterlevel) {
+            // normLight = 0.0;
+            vec4 waterCol = water(uv);
+            float subsurfaceness = h / (2.2 *_waterlevel);
+            vec4 blueTint = vec4(waterCol.xyz, 0.0) * 0.33;
+            gl_FragColor = mix(waterCol, uColSand + blueTint, subsurfaceness);
+        }
+    }
+    else
+        gl_FragColor = vec4(h, h, h, 1.0);
 
     float normLight = normalLight(uv);
-
-    if (h < _waterlevel) {
-        // normLight = 0.0;
-        vec4 waterCol = water(uv);
-        float subsurfaceness = h / (2.2 *_waterlevel);
-        vec4 blueTint = vec4(waterCol.xyz, 0.0) * 0.33;
-        gl_FragColor = mix(waterCol, uColSand + blueTint, subsurfaceness);
-    }
 
     float sunLight = 0.0;    
 
