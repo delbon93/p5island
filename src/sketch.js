@@ -14,6 +14,7 @@ let shadowsEnabled = 1.0;
 let wavesEnabled = 1.0;
 let cloudsEnabled = 1.0;
 let edgeFalloffEnabled = 1.0;
+let colorsEnabled = 1.0;
 let falloffExponent = 0.0;
 
 let frozenMousePos = null;
@@ -55,8 +56,6 @@ function keyTyped() {
         colorsEnabled = 0;
     }
 
-    if (key === 'h')
-        heightmapIndex = (heightmapIndex + 1) % heightmaps.length;
     if (key === 's')
         shadowsEnabled = 1 - shadowsEnabled;
     if (key === 'w')
@@ -74,12 +73,29 @@ function keyTyped() {
     if (key === 'o')
         colorsEnabled = 1 - colorsEnabled;
 }
+
+let leftArrowState = false;
+let rightArrowState = false;
     
 function draw() {
     if (keyIsDown(UP_ARROW))
         falloffExponent += 1.5 / FPS;
     if (keyIsDown(DOWN_ARROW))
         falloffExponent -= 1.5 / FPS;
+
+    if (keyIsDown(LEFT_ARROW) && !leftArrowState) {
+        leftArrowState = true;
+        heightmapIndex = (heightmapIndex - 1 + heightmaps.length) % heightmaps.length;
+    }
+    if (!keyIsDown(LEFT_ARROW))
+        leftArrowState = false;
+
+    if (keyIsDown(RIGHT_ARROW) && !rightArrowState) {
+        rightArrowState = true;
+        heightmapIndex = (heightmapIndex + 1) % heightmaps.length;
+    }
+    if (!keyIsDown(RIGHT_ARROW))
+        rightArrowState = false;
 
 
     let mX = mouseX;
