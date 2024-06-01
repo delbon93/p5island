@@ -24,6 +24,12 @@ function preload() {
     heightmaps.push(loadImage("res/heightmap3.png"));
     heightmaps.push(loadImage("res/heightmap.png"));
     heightmaps.push(loadImage("res/heightmap2.png"));
+    heightmaps.push(loadImage("res/heightmap4.png"));
+    heightmaps.push(loadImage("res/heightmap5.png"));
+    heightmaps.push(loadImage("res/heightmap6.png"));
+    heightmaps.push(loadImage("res/heightmap7.png"));
+    heightmaps.push(loadImage("res/heightmap8.png"));
+    heightmaps.push(loadImage("res/heightmap9.png"));
     wavemap = loadImage("res/waves.png");
     terrainGrain = loadImage("res/grain.png");
     clouds = loadImage("res/clouds.png");
