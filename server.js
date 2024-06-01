@@ -30,7 +30,8 @@ function handleRequest(req, res) {
   var typeExt = {
     '.html': 'text/html',
     '.js':   'text/javascript',
-    '.css':  'text/css'
+    '.css':  'text/css',
+    '.png':  'image/png'
   };
   // What is it?  Default to plain text
 
